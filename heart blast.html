@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>I love you bhai — Click Blast</title>
+<style>
+  :root{
+    --bg: #0f172a;
+    --accent: #ff3d7f;
+    --accent-dark: #e62f6f;
+    --particle-size: 8px;
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 10% 10%, #082033 0%, var(--bg) 40%),
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
+    color:#fff;
+    overflow:hidden;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* tiny instruction */
+  .hint{
+    position:fixed;
+    left:16px; bottom:16px;
+    background:rgba(255,255,255,0.06);
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:13px;
+    color:#dbeafe;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Particle styles */
+  .particle {
+    position:fixed;
+    width: var(--particle-size);
+    height: var(--particle-size);
+    border-radius:50%;
+    pointer-events:none;
+    transform: translate(-50%,-50%) scale(1);
+    will-change: transform, opacity;
+    opacity:1;
+    mix-blend-mode: screen;
+    box-shadow: 0 0 8px rgba(255,255,255,0.12), 0 0 24px rgba(255,255,255,0.02);
+  }
+
+  /* heart pop */
+  .heart {
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform: translate(-50%,-50%) scale(0.4);
+    width:160px;
+    height:160px;
+    pointer-events:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: transform 600ms cubic-bezier(.23,1,.32,1), opacity 400ms;
+    opacity:0;
+    z-index:60;
+  }
+
+  /* heart shape using pseudo elements */
+  .heart-shape{
+    position:absolute;
+    width:100px;
+    height:90px;
+    transform: rotate(-45deg);
+    background: linear-gradient(180deg,  var(--accent) 0%, var(--accent-dark) 100%);
+    border-radius:12px;
+    box-shadow: 0 12px 30px rgba(255, 119, 0, 0.36), 0 4px 12px rgba(0,0,0,0.4);
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.45));
+    left:50%;
+    top:45%;
+    transform-origin:center;
+  }
+  .heart-shape::before,
+  .heart-shape::after{
+    content:"";
+    position:absolute;
+    width:100px;
+    height:90px;
+    background: inherit;
+    border-radius:50%;
+  }
+  .heart-shape::before{ top:-50px; left:0; }
+  .heart-shape::after{ left:50px; top:0; }
+
+  .heart span{
+    position:relative;
+    z-index:10;
+    color:white;
+    font-weight:700;
+    font-size:18px;
+    text-align:center;
+    transform: rotate(45deg);
+    text-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  }
+
+  /* animation classes toggled by JS */
+  .heart.show {
+    opacity:1;
+    transform: translate(-50%,-50%) scale(1);
+  }
+  .heart.pop {
+    animation: popPulse 600ms cubic-bezier(.2,.9,.2,1);
+  }
+  @keyframes popPulse {
+    0% { transform: translate(-50%,-50%) scale(0.7); }
+    60% { transform: translate(-50%,-50%) scale(1.12); }
+    100% { transform: translate(-50%,-50%) scale(1); }
+  }
+
+  /* small sparkle for background */
+  .sparkle {
+    position:fixed;
+    width:3px;
+    height:3px;
+    border-radius:50%;
+    background: rgba(255,255,255,0.08);
+    pointer-events:none;
+    filter: blur(1px);
+    opacity:0.9;
+  }
+
+  /* subtle footer text */
+  .credit{
+    position:fixed;
+    right:12px;
+    bottom:12px;
+    font-size:12px;
+    color:rgba(255,255,255,0.6);
+    user-select:none;
+  }
+
+  @media (max-width:480px){
+    .heart { width:120px; height:120px; }
+    .heart span { font-size:15px; }
+  }
+</style>
+</head>
+<body>
+  <div class="hint">Click anywhere to blast 💥</div>
+  <div class="credit">Made with ❤️ — press anywhere</div>
+
+  <!-- Heart element -->
+  <div class="heart" id="heart">
+    <div class="heart-shape" aria-hidden="true"></div>
+    <span>I love you Jaan</span>
+  </div>
+
+<script>
+(() => {
+  const heart = document.getElementById('heart');
+
+  // Helper: random number in range
+  const rnd = (min, max) => Math.random() * (max - min) + min;
+
+  // Colors palette for particles
+  const colors = ['#ff7aa2','#ffd166','#ffd1f0','#ffb3c6','#fff1b8','#ff6b6b','#ffc6ff'];
+
+  // Create explosion particles at x,y
+  function blast(x, y) {
+    const count = 28; // number of particles
+    const particles = [];
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = rnd(6, 14);
+      p.style.width = p.style.height = size + 'px';
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.background = colors[Math.floor(rnd(0, colors.length))];
+      p.style.opacity = 1;
+      p.style.zIndex = 100 + i;
+      document.body.appendChild(p);
+      particles.push({el: p, vx: rnd(-1.8,1.8), vy: rnd(-3.5,-0.5), rot: rnd(-720,720), life: rnd(700,1200), size});
+    }
+
+    const start = performance.now();
+    function frame(now) {
+      const t = now - start;
+      particles.forEach(obj => {
+        const p = obj.el;
+        const age = t / obj.life;
+        if (age >= 1) {
+          p.style.opacity = 0;
+          return;
+        }
+        // basic physics: gravity + drag
+        const dx = obj.vx *  (1 + age*0.8) * 24 * 0.01;
+        const dy = obj.vy * (1 + age*0.6) * 24 * 0.01 + (age*age*40); // gravity
+        p.style.transform = `translate(${dx*60}px, ${dy*1.6}px) rotate(${obj.rot*age}deg) scale(${1 - age*0.6})`;
+        p.style.opacity = `${1 - age}`;
+      });
+      // remove dead particles after longest life
+      if (t < Math.max(...particles.map(p=>p.life)) + 100) {
+        requestAnimationFrame(frame);
+      } else {
+        particles.forEach(obj => obj.el.remove());
+      }
+    }
+    requestAnimationFrame(frame);
+
+    // tiny sparkles
+    for (let i=0;i<8;i++){
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      s.style.left = (x + rnd(-60,60)) + 'px';
+      s.style.top = (y + rnd(-40,40)) + 'px';
+      s.style.opacity = rnd(0.25,0.9);
+      s.style.zIndex = 80;
+      document.body.appendChild(s);
+      s.animate([
+        { transform: 'scale(0.4)', opacity: 0.9 },
+        { transform: 'scale(1.8)', opacity: 0 }
+      ], { duration: rnd(700,1200), easing: 'ease-out' });
+      setTimeout(()=> s.remove(), rnd(700,1300));
+    }
+  }
+
+  // show heart at center with pop
+  function showHeart() {
+    heart.classList.remove('pop','show');
+    // force reflow to restart animation
+    void heart.offsetWidth;
+    heart.classList.add('show','pop');
+    // automatically hide after 2.6s
+    clearTimeout(heart._hideTimeout);
+    heart._hideTimeout = setTimeout(()=> {
+      heart.classList.remove('show','pop');
+    }, 2600);
+  }
+
+  // Click handler
+  let clickCooldown = false;
+  window.addEventListener('pointerdown', (e) => {
+    // position of click
+    const x = e.clientX;
+    const y = e.clientY;
+    blast(x, y);
+
+    // show heart on first click or if clicked near center
+    const cx = window.innerWidth/2;
+    const cy = window.innerHeight/2;
+    const distCenter = Math.hypot(x-cx, y-cy);
+
+    // Show heart if click near center OR randomly with 40% chance
+    if (distCenter < 160 || Math.random() < 0.4) {
+      showHeart();
+    } else {
+      // small chance to show heart after a tiny delay
+      if (Math.random() < 0.08) setTimeout(showHeart, 220);
+    }
+
+    // small visual click feedback: scale background slightly
+    if (!clickCooldown) {
+      clickCooldown = true;
+      document.body.animate([{ transform:'scale(1)' },{ transform:'scale(0.997)' },{ transform:'scale(1)'}], { duration: 280, easing:'ease-out' });
+      setTimeout(()=> clickCooldown=false, 300);
+    }
+  });
+
+  // keyboard shortcut: press H to toggle heart
+  window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'h') {
+      showHeart();
+      // also make a center blast
+      blast(window.innerWidth/2, window.innerHeight/2);
+    }
+  });
+
+  // small welcome blast on load
+  window.addEventListener('load', () => {
+    setTimeout(()=> {
+      blast(window.innerWidth/2, window.innerHeight/2 - 40);
+      showHeart();
+    }, 550);
+  });
+
+})();
+</script>
+</body>
+</html>
