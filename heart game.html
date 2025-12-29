@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch the Heart Game</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: radial-gradient(circle at top left, #e62f6f, #1e293b);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    color: #fff;
+  }
+
+  .heart {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(180deg, #ff3d7f 0%, #e62f6f 100%);
+    transform: rotate(-45deg);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .heart::before,
+  .heart::after {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: inherit;
+    border-radius: 50%;
+  }
+  .heart::before { top: -30px; left: 0; }
+  .heart::after { left: 30px; top: 0; }
+
+  .scoreboard {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    font-size: 20px;
+  }
+
+  .timer {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    font-size: 20px;
+  }
+
+  .game-over {
+    position: fixed;
+    top:50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+    font-size: 32px;
+    display: none;
+    text-align: center;
+    background: rgba(0,0,0,0.7);
+    padding: 20px 40px;
+    border-radius: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="scoreboard">Score: <span id="score">0</span></div>
+<div class="timer">Time: <span id="time">20</span>s</div>
+<div class="game-over" id="gameOver">Game Over!<br>Your Score: <span id="finalScore">0</span><br><button onclick="startGame()">Play Again</button></div>
+
+<script>
+  const scoreEl = document.getElementById('score');
+  const timeEl = document.getElementById('time');
+  const gameOverEl = document.getElementById('gameOver');
+  const finalScoreEl = document.getElementById('finalScore');
+
+  let score = 0;
+  let time = 20;
+  let heartEl;
+  let timerInterval;
+
+  function randomPosition() {
+    const x = Math.random() * (window.innerWidth - 60);
+    const y = Math.random() * (window.innerHeight - 60);
+    return { x, y };
+  }
+
+  function spawnHeart() {
+    if (heartEl) heartEl.remove();
+    heartEl = document.createElement('div');
+    heartEl.classList.add('heart');
+
+    const {x, y} = randomPosition();
+    heartEl.style.left = x + 'px';
+    heartEl.style.top = y + 'px';
+
+    // Random color
+    const colors = ['#ff3d7f','#ffd166','#4ade80','#16a34a','#9333ea','#ff6b6b'];
+    const c = colors[Math.floor(Math.random()*colors.length)];
+    heartEl.style.background = `linear-gradient(180deg, ${c} 0%, ${c} 100%)`;
+
+    heartEl.addEventListener('click', () => {
+      score++;
+      scoreEl.textContent = score;
+      spawnHeart(); // next heart
+    });
+
+    document.body.appendChild(heartEl);
+  }
+
+  function startGame() {
+    score = 0;
+    time = 20;
+    scoreEl.textContent = score;
+    timeEl.textContent = time;
+    gameOverEl.style.display = 'none';
+    spawnHeart();
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      time--;
+      timeEl.textContent = time;
+      if(time <= 0){
+        clearInterval(timerInterval);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function endGame() {
+    if (heartEl) heartEl.remove();
+    finalScoreEl.textContent = score;
+    gameOverEl.style.display = 'block';
+  }
+
+  // start game on load
+  window.onload = startGame;
+</script>
+
+</body>
+</html>
